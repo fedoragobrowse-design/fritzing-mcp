@@ -10,14 +10,21 @@ from __future__ import annotations
 
 import glob
 import os
+import sys
 import sqlite3
 import xml.etree.ElementTree as ET
 
-APP_ROOT = os.environ.get("FRITZING_APP_ROOT") or os.path.expanduser(
-    "~/code/fritzing/fritzing")
-PARTS_DB = os.path.join(APP_ROOT, "parts", "parts.db")
-LOCAL_PARTS_DIR = os.path.expanduser(
-    "~/.local/share/Fritzing/Fritzing/local_parts")
+IS_WINDOWS = sys.platform == "win32"
+if IS_WINDOWS:
+    APP_ROOT = os.environ.get("FRITZING_APP_ROOT") or r"C:\Program Files\Fritzing"
+    PARTS_DB = os.path.join(APP_ROOT, "fritzing-parts", "parts.db")
+    LOCAL_PARTS_DIR = os.path.expanduser(r"~\Documents\Fritzing\parts")
+else:
+    APP_ROOT = os.environ.get("FRITZING_APP_ROOT") or os.path.expanduser(
+        "~/code/fritzing/fritzing")
+    PARTS_DB = os.path.join(APP_ROOT, "parts", "parts.db")
+    LOCAL_PARTS_DIR = os.path.expanduser(
+        "~/.local/share/Fritzing/Fritzing/local_parts")
 
 
 class Part:

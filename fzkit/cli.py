@@ -14,13 +14,19 @@ import xml.etree.ElementTree as ET
 
 from . import model, partsdb
 
-APP_ROOT = os.environ.get("FRITZING_APP_ROOT") or os.path.expanduser(
-    "~/code/fritzing/fritzing")
-_FZ_BASE = os.path.dirname(APP_ROOT)
-FRITZING_BIN = os.path.join(APP_ROOT, "Fritzing")
-QT6_LIBS = os.path.join(_FZ_BASE, "qt6-libs")
-QT6_PLUGINS = os.path.join(_FZ_BASE, "qt6-plugins")
-LAUNCHER = os.path.join(_FZ_BASE, "run-fritzing.sh")
+IS_WINDOWS = sys.platform == "win32"
+if IS_WINDOWS:
+    APP_ROOT = os.environ.get("FRITZING_APP_ROOT") or r"C:\Program Files\Fritzing"
+    FRITZING_BIN = APP_ROOT
+    LAUNCHER = os.path.join(APP_ROOT, "Fritzing.exe")
+else:
+    APP_ROOT = os.environ.get("FRITZING_APP_ROOT") or os.path.expanduser(
+        "~/code/fritzing/fritzing")
+    _FZ_BASE = os.path.dirname(APP_ROOT)
+    FRITZING_BIN = os.path.join(APP_ROOT, "Fritzing")
+    QT6_LIBS = os.path.join(_FZ_BASE, "qt6-libs")
+    QT6_PLUGINS = os.path.join(_FZ_BASE, "qt6-plugins")
+    LAUNCHER = os.path.join(_FZ_BASE, "run-fritzing.sh")
 
 PKG_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEMPLATE = os.path.join(PKG_DIR, "templates", "sketch.fz")
