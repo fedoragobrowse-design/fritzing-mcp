@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import os
 import subprocess
+import sys
 from pathlib import Path
 from typing import Annotated
 
@@ -38,12 +39,14 @@ def _fz() -> str:
 
 
 def _run(*argv: str, timeout: int = _TIMEOUT_S) -> str:
-    r = subprocess.run([_fz(), *argv], capture_output=True, text=True,
+    # Run fz in this interpreter, so fz and fzp_checker see the server's venv (lxml).
+    r = subprocess.run([sys.executable, _fz(), *argv], capture_output=True, text=True,
                        timeout=timeout)
+    out = "\n".join(s.strip() for s in (r.stdout, r.stderr) if s and s.strip())
     if r.returncode != 0:
-        msg = (r.stderr or r.stdout or "").strip() or f"exit={r.returncode}"
-        raise RuntimeError(f"fz {' '.join(argv[:2])} failed: {msg}")
-    return (r.stdout or "").strip()
+        raise RuntimeError(f"fz {' '.join(argv[:2])} failed (exit {r.returncode}):\n"
+                           f"{out or '(no output)'}")
+    return out
 
 
 def _props(props: dict[str, str]) -> list[str]:
@@ -208,17 +211,22 @@ def fritzing_create_part(
     spec_path: Annotated[str, "path to a part spec JSON (schema in the fzkit docs)"],
     install: Annotated[bool, "install into local_parts so the app discovers it"] = False,
     out: Annotated[str, "output directory for the generated fzp+SVGs"] = "",
+    flat: Annotated[bool, "write into `out` itself, not out/<moduleId>/"] = False,
 ) -> str:
     """Generate a custom part (fzp + 4 view SVGs) from a JSON spec.
 
     Custom parts must have all 4 views; restart Fritzing after --install
-    (parts are scanned at startup).
+    (parts are scanned at startup). Optional breadboard style keys in
+    geometry.breadboard: pin_r, legs, stroke, body, extra, labels
+    ([{text?, side}] per pin), label_size, label_color.
     """
     argv = ["part", "new", spec_path]
     if install:
         argv.append("--install")
     if out:
         argv += ["--out", out]
+    if flat:
+        argv.append("--flat")
     return _run(*argv)
 
 
