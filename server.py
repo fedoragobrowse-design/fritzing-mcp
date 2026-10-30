@@ -129,11 +129,19 @@ def fritzing_wire(
     ref_b: Annotated[str, "'ref.connectorId'"],
     view: Annotated[str, "bb | sc | pcb | all"] = "bb",
     color: Annotated[str, "hex color, e.g. '#ff0000'"] = "",
+    via: Annotated[list[list[float]], "breadboard bend points [[x, y], ...] in absolute px, in path order"] | None = None,
 ) -> str:
-    """Wire two part connectors together (creates the electrical <connect>)."""
+    """Wire two part connectors together (creates the electrical <connect>).
+
+    The wire ends on the real pin positions from each part's SVG. Bend points
+    become a chain of wire segments, as the Fritzing app stores them. Each
+    view gets its own wire; `via` applies to the breadboard view only.
+    """
     argv = ["wire", file, ref_a, ref_b, "--view", view]
     if color:
         argv += ["--color", color]
+    for x, y in via or []:
+        argv += ["--via", f"{x:g},{y:g}"]
     return _run(*argv)
 
 
@@ -175,11 +183,13 @@ def fritzing_show_sketch(file: str) -> str:
 # ----------------------------------------------------------------- validation
 
 @mcp.tool
-def fritzing_check(file: str) -> str:
+def fritzing_check(file: str, strict: bool = False) -> str:
     """Validate a sketch: unique modelIndexes, resolvable moduleIds, every
     instance has >= 1 view, every wire endpoint connector exists on its target.
+    Also warns when a breadboard wire crosses a part or passes over a pin it
+    does not use. strict=True turns those warnings into failures.
     MUST pass before handing a design off or opening it in the GUI."""
-    return _run("check", file)
+    return _run("check", file, *(["--strict"] if strict else []))
 
 
 @mcp.tool
