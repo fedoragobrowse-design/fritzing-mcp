@@ -129,11 +129,23 @@ def fritzing_wire(
     ref_b: Annotated[str, "'ref.connectorId'"],
     view: Annotated[str, "bb | sc | pcb | all"] = "bb",
     color: Annotated[str, "hex color, e.g. '#ff0000'"] = "",
+    via: Annotated[list[list[float]], "breadboard bend points [[x, y], ...] in absolute px, in path order"] | None = None,
 ) -> str:
-    """Wire two part connectors together (creates the electrical <connect>)."""
+    """Wire two part connectors together (creates the electrical <connect>).
+
+    An end can also be a wire end, 'Wire7.connector1': the new wire branches
+    from that end or bend point. Use a branch for one signal that goes to
+    several pins, for example GND. Wire titles are in fritzing_show_sketch.
+
+    The wire ends on the real pin positions from each part's SVG. Bend points
+    become a chain of wire segments, as the Fritzing app stores them. Each
+    view gets its own wire; `via` applies to the breadboard view only.
+    """
     argv = ["wire", file, ref_a, ref_b, "--view", view]
     if color:
         argv += ["--color", color]
+    for x, y in via or []:
+        argv += ["--via", f"{x:g},{y:g}"]
     return _run(*argv)
 
 
